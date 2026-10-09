@@ -1,0 +1,28 @@
+{
+  "name": "Impossible travel: one account signing in from several external addresses",
+  "description": "Lab rule for the CTIA impossible-travel-001 scenario. It fires on every successful Windows logon (event.code 4624, event.outcome success) for the single account the scenario is built around, so the analyst is handed three alerts instead of having to go looking for the account. Three is the exact number of attack events in the dataset: the rule matches three documents, and with no threshold each of those documents becomes its own alert. The three records it matches are the same three the investigation's own query returns, so the number the alert page shows and the number you find by hand are the same number. Scoping to one account is a lab-only concession and is NOT a production shape - the account name is the first thing an attacker changes. The account-agnostic alternatives were measured against this data and all of them are worse here: 'event.code: 4624 and event.outcome: \"success\"' raises 74 alerts, of which 33 are the ordinary outbound traffic of five other accounts, and adding an external-address filter only brings it down to 36. Grouping by user.name with a threshold of three or more distinct external addresses does not isolate this account at all, because three other accounts also have three distinct external addresses - what actually separates it is that each of this account's three is used exactly once and all three fall inside a quarter of an hour, and this dataset carries no geo fields to express that. The time window is deliberately long because this lab ships historical data; a real deployment would use a short window, index the geo fields, and alert on the velocity of the logons rather than on an account name.",
+  "type": "query",
+  "risk_score": 99,
+  "severity": "critical",
+  "tags": [
+    "ctia-lab",
+    "authentication",
+    "impossible-travel",
+    "credential-access",
+    "initial-access",
+    "detection-engineering"
+  ],
+  "enabled": true,
+  "interval": "1m",
+  "from": "now-365d",
+  "to": "now",
+  "index": [
+    "auth-*"
+  ],
+  "timeField": "@timestamp",
+  "query": "event.code: 4624 and event.outcome: \"success\" and user.name: \"jdoe\"",
+  "language": "kuery",
+  "max_signals": 100,
+  "actions": [],
+  "notify_when": "onActiveAlert"
+}
